@@ -15,8 +15,7 @@
         return function(endpointUrl) {
 
             var executeQuery = function(sparqlQry) {
-                return $http.get(endpointUrl + '?query=' + encodeURIComponent(sparqlQry) + '&format=json',
-                    { cache: true });
+                return $http.get(endpointUrl + '?query=' + encodeURIComponent(sparqlQry) + '&format=json');
             };
 
             return {
