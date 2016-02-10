@@ -7,16 +7,23 @@
 
     /* ngInject */
     function PagerService($q, _) {
-        return function(sparqlQry, resultSetQry, pageSize, getResults, pagesPerQuery, itemCount) {
+        return function(sparqlQry, resultSetQry, itemsPerPage, getResults, pagesPerQuery, itemCount) {
 
             var self = this;
 
+            /* Public API */
+
+            // getTotalCount() -> promise
             self.getTotalCount = getTotalCount;
+            // getPage(pageNumber) -> promise
             self.getPage = getPage;
+            // getAllSequentially() -> promise
             self.getAllSequentially = getAllSequentially;
 
             // How many pages to get with one query.
-            self.pagesPerQuery = pagesPerQuery;
+            self.pagesPerQuery = pagesPerQuery || 1;
+
+            /* Internal vars */
 
             // The total number of items.
             var count = itemCount || undefined;
@@ -25,13 +32,101 @@
             // Cached pages.
             var pages = [];
 
+            var pageSize = itemsPerPage;
+
             var countQry = countify(resultSetQry.replace('<PAGE>', ''));
 
-            function pagify(sparqlQry, page, pageSize) {
+            /* Public API function definitions */
+
+            function getPage(pageNo) {
+                // Get a specific "page" of data.
+
+                // Get cached page if available.
+                if (pages[pageNo]) {
+                    return pages[pageNo].promise;
+                }
+                if (pageNo < 0) {
+                    return $q.when([]);
+                }
+                return getTotalCount().then(function() {
+                    if (pageNo > maxPage) {
+                        pageNo = maxPage;
+                    }
+                    if (!count) {
+                        return $q.when([]);
+                    }
+                    // Get the page window for the query (i.e. query for surrounding
+                    // pages as well according to self.pagesPerQuery).
+                    var start = getPageWindowStart(pageNo);
+                    // Assign a promise to each page within the window as all of those
+                    // will be fetched.
+                    for (var i = start; i < start + self.pagesPerQuery && i <= maxPage; i++) {
+                        if (!pages[i]) {
+                            pages[i] = $q.defer();
+                        }
+                    }
+                    // Query for the pages.
+                    return getResults(pagify(sparqlQry, start, pageSize, self.pagesPerQuery))
+                    .then(function(results) {
+                        var chunks = _.chunk(results, pageSize);
+                        chunks.forEach(function(page) {
+                            // Resolve each page promise.
+                            pages[start].resolve(page);
+                            start++;
+                        });
+                        // Return (the promise of) the requested page.
+                        return pages[pageNo].promise;
+                    });
+                });
+            }
+
+            function getAllSequentially(chunkSize) {
+                // Get all of the data in chunks sequentially.
+                var all = [];
+                var res = $q.defer();
+                var chain = $q.when();
+                return getTotalCount().then(function(count) {
+                    var max = Math.ceil(count / chunkSize);
+                    var j = 0;
+                    for (var i = 0; i < max; i++) {
+                        chain = chain.then(function() {
+                            return getResults(pagify(sparqlQry, j++, chunkSize, 1)).then(function(page) {
+                                all = all.concat(page);
+                                res.notify(all);
+                            });
+                        });
+                    }
+                    chain.then(function() {
+                        res.resolve(all);
+                    });
+
+                    return res.promise;
+                });
+            }
+
+            function getTotalCount() {
+                // Get the total number of items that the result set query returns.
+                // Returns a promise.
+
+                // Get cached count if available.
+                if (count) {
+                    return $q.when(count);
+                }
+                return getResults(countQry, true).then(function(results) {
+                    // Cache the count.
+                    count = parseInt(results[0].count.value);
+                    maxPage = calculateMaxPage(count, pageSize);
+                    return count;
+                });
+            }
+
+            /* Internal helper functions */
+
+            function pagify(sparqlQry, page, pageSize, pagesPerQuery) {
                 // Form the query for the given page.
-                var pages = self.pagesPerQuery;
-                return sparqlQry.replace('<PAGE>',
-                        ' LIMIT ' + pageSize * pages + ' OFFSET ' + (page * pageSize));
+                var query = sparqlQry.replace('<PAGE>',
+                        ' LIMIT ' + pageSize * pagesPerQuery + ' OFFSET ' + (page * pageSize));
+                return query;
             }
 
             function countify(sparqlQry) {
@@ -86,88 +181,10 @@
                 return min;
             }
 
-            function getTotalCount() {
-                // Get the total number of items that the original query returns.
-                // Returns a promise.
-
-                // Get cached count if available.
-                if (count) {
-                    return $q.when(count);
-                }
-                return getResults(countQry, true).then(function(results) {
-                    // Cache the count.
-                    count = parseInt(results[0].count.value);
-                    maxPage = calculateMaxPage(count, pageSize);
-                    return count;
-                });
-            }
-
             function calculateMaxPage(count, pageSize) {
                 return Math.ceil(count / pageSize) - 1;
             }
 
-            function getPage(pageNo) {
-                // Get a specific "page" of data.
-
-                // Get cached page if available.
-                if (pages[pageNo]) {
-                    return pages[pageNo].promise;
-                }
-                if (pageNo < 0) {
-                    return $q.when([]);
-                }
-                return getTotalCount().then(function() {
-                    if (pageNo > maxPage) {
-                        pageNo = maxPage;
-                    }
-                    // Get the page window for the query (i.e. query for surrounding
-                    // pages as well according to self.pagesPerQuery).
-                    var start = getPageWindowStart(pageNo);
-                    // Assign a promise to each page within the window as all of those
-                    // will be fetched.
-                    for (var i = start; i < start + self.pagesPerQuery && i <= maxPage; i++) {
-                        if (!pages[i]) {
-                            pages[i] = $q.defer();
-                        }
-                    }
-                    // Query for the pages.
-                    return getResults(pagify(sparqlQry, start, pageSize))
-                    .then(function(results) {
-                        var chunks = _.chunk(results, pageSize);
-                        chunks.forEach(function(page) {
-                            // Resolve each page promise.
-                            pages[start].resolve(page);
-                            start++;
-                        });
-                        // Return (the promise of) the requested page.
-                        return pages[pageNo].promise;
-                    });
-                });
-            }
-
-            function getAllSequentially(chunkSize) {
-                // Get all of the data.
-                var all = [];
-                var res = $q.defer();
-                var chain = $q.when();
-                return getTotalCount().then(function(count) {
-                    var max = Math.ceil(count / chunkSize);
-                    var j = 0;
-                    for (var i = 0; i < max; i++) {
-                        chain = chain.then(function() {
-                            return getResults(pagify(sparqlQry, j++, chunkSize, 1)).then(function(page) {
-                                all = all.concat(page);
-                                res.notify(all);
-                            });
-                        });
-                    }
-                    chain.then(function() {
-                        res.resolve(all);
-                    });
-
-                    return res.promise;
-                });
-            }
         };
     }
 })();
