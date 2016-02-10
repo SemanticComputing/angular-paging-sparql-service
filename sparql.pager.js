@@ -7,7 +7,7 @@
 
     /* ngInject */
     function PagerService($q, _) {
-        return function(sparqlQry, resultSetQry, pageSize, getResults, pagesPerQuery) {
+        return function(sparqlQry, resultSetQry, pageSize, getResults, pagesPerQuery, itemCount) {
 
             var self = this;
 
@@ -19,9 +19,9 @@
             self.pagesPerQuery = pagesPerQuery;
 
             // The total number of items.
-            var count;
+            var count = itemCount || undefined;
             // The number of the last page.
-            var maxPage = Infinity;
+            var maxPage = count ? calculateMaxPage(count, pageSize) : undefined;
             // Cached pages.
             var pages = [];
 
@@ -55,7 +55,7 @@
                 var minMin = pageNo < self.pagesPerQuery ? 0 : pageNo - self.pagesPerQuery;
                 var maxMax = pageNo + self.pagesPerQuery > maxPage ? maxPage : pageNo + self.pagesPerQuery;
                 var min, max;
-                for (min = minMin; min < pageNo; min++) {
+                for (min = minMin; min <= pageNo; min++) {
                     // Get the lowest non-cached page within the extended window.
                     if (!pages[min]) {
                         break;
@@ -74,12 +74,12 @@
                 if (minMin === min && maxMax === max) {
                     // No cached pages near the requested page
                     // -> requested page in the center of the window
-                    return min + Math.ceil(pageSize / 2);
+                    return min + Math.ceil(self.pagesPerQuery / 2);
                 }
                 if (max < maxMax) {
                     // There are some cached pages toward the end of the extended window
                     // -> window ends at the last non-cached page
-                    return Math.max(max - pageSize + 1, 0);
+                    return Math.max(max - self.pagesPerQuery + 1, 0);
                 }
                 // Otherwise window starts from the lowest non-cached page
                 // within the extended window.
@@ -97,9 +97,13 @@
                 return getResults(countQry, true).then(function(results) {
                     // Cache the count.
                     count = parseInt(results[0].count.value);
-                    maxPage = Math.ceil(count / pageSize) - 1;
+                    maxPage = calculateMaxPage(count, pageSize);
                     return count;
                 });
+            }
+
+            function calculateMaxPage(count, pageSize) {
+                return Math.ceil(count / pageSize) - 1;
             }
 
             function getPage(pageNo) {
@@ -109,30 +113,35 @@
                 if (pages[pageNo]) {
                     return pages[pageNo].promise;
                 }
-                if (maxPage < 0) {
+                if (pageNo < 0) {
                     return $q.when([]);
                 }
-                // Get the page window for the query (i.e. query for surrounding
-                // pages as well according to self.pagesPerQuery).
-                var start = getPageWindowStart(pageNo);
-                // Assign a promise to each page within the window as all of those
-                // will be fetched.
-                for (var i = start; i < start + self.pagesPerQuery && i <= maxPage; i++) {
-                    if (!pages[i]) {
-                        pages[i] = $q.defer();
+                return getTotalCount().then(function() {
+                    if (pageNo > maxPage) {
+                        pageNo = maxPage;
                     }
-                }
-                // Query for the pages.
-                return getResults(pagify(sparqlQry, start, pageSize))
-                .then(function(results) {
-                    var chunks = _.chunk(results, pageSize);
-                    chunks.forEach(function(page) {
-                        // Resolve each page promise.
-                        pages[start].resolve(page);
-                        start++;
+                    // Get the page window for the query (i.e. query for surrounding
+                    // pages as well according to self.pagesPerQuery).
+                    var start = getPageWindowStart(pageNo);
+                    // Assign a promise to each page within the window as all of those
+                    // will be fetched.
+                    for (var i = start; i < start + self.pagesPerQuery && i <= maxPage; i++) {
+                        if (!pages[i]) {
+                            pages[i] = $q.defer();
+                        }
+                    }
+                    // Query for the pages.
+                    return getResults(pagify(sparqlQry, start, pageSize))
+                    .then(function(results) {
+                        var chunks = _.chunk(results, pageSize);
+                        chunks.forEach(function(page) {
+                            // Resolve each page promise.
+                            pages[start].resolve(page);
+                            start++;
+                        });
+                        // Return (the promise of) the requested page.
+                        return pages[pageNo].promise;
                     });
-                    // Return (the promise of) the requested page.
-                    return pages[pageNo].promise;
                 });
             }
 
