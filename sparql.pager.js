@@ -1,3 +1,9 @@
+/*
+ * Service for paging SPARQL results.
+ *
+ * TODO: Fix race condition problem when changing the page size (perhaps don't
+ *      allow it at all without a new instantiation?)
+ */
 (function() {
 
     'use strict';
@@ -5,6 +11,27 @@
     angular.module('sparql')
     .factory('PagerService', PagerService);
 
+    /* Provides a constructor for a pager.
+     *
+     * Parameters:
+     *
+     * sparqlQry is the SPARQL query for the results (with a <PAGE> place holder
+     * for where the paging should happen).
+     *
+     * resultSetQry is the result set subquery part of the query - i.e. the part which
+     * defines the distinct objects that are being paged (with the <PAGE> place holder).
+     *
+     * itemsPerPage is the size of a single page.
+     *
+     * getResults is a function that returns a promise of results given a
+     * SPARQL query.
+     *
+     * pagesPerQuery is the number of pages fetched (and cached) per each page request.
+     * Optional, defaults to 1.
+     *
+     * itemCount is the total number of items that the sparqlQry returns.
+     * Optional, will be queried based on the resultSetQry if not given.
+     *
     /* ngInject */
     function PagerService($q, _) {
         return function(sparqlQry, resultSetQry, itemsPerPage, getResults, pagesPerQuery, itemCount) {
@@ -38,8 +65,18 @@
 
             /* Public API function definitions */
 
-            function getPage(pageNo) {
+            function getPage(pageNo, size) {
                 // Get a specific "page" of data.
+                // Currently prone to race conditions when using the size
+                // parameter to change the page size.
+
+                if (size && size !== pageSize) {
+                    // Page size change. Clear page cache.
+                    // This part is problematic if the function is called
+                    // multiple times in short succession.
+                    pageSize = size;
+                    pages = [];
+                }
 
                 // Get cached page if available.
                 if (pages[pageNo]) {
@@ -110,6 +147,7 @@
 
                 // Get cached count if available.
                 if (count) {
+                    maxPage = calculateMaxPage(count, pageSize);
                     return $q.when(count);
                 }
                 return getResults(countQry, true).then(function(results) {
