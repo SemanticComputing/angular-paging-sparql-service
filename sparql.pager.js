@@ -42,6 +42,8 @@
 
             // getTotalCount() -> promise
             self.getTotalCount = getTotalCount;
+            // getMaxPageNo() -> promise
+            self.getMaxPageNo = getMaxPageNo;
             // getPage(pageNumber) -> promise
             self.getPage = getPage;
             // getAllSequentially() -> promise
@@ -86,10 +88,7 @@
                     return $q.when([]);
                 }
                 return getTotalCount().then(function() {
-                    if (pageNo > maxPage) {
-                        pageNo = maxPage;
-                    }
-                    if (!count) {
+                    if (pageNo > maxPage || !count) {
                         return $q.when([]);
                     }
                     // Get the page window for the query (i.e. query for surrounding
@@ -155,6 +154,12 @@
                     count = parseInt(results[0].count.value);
                     maxPage = calculateMaxPage(count, pageSize);
                     return count;
+                });
+            }
+
+            function getMaxPageNo() {
+                return getTotalCount().then(function(count) {
+                    return calculateMaxPage(count, pageSize);
                 });
             }
 
