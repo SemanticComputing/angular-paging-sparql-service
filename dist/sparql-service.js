@@ -1,43 +1,3 @@
-(function() {
-    'use strict';
-
-    angular.module('sparql', []);
-})();
-
-/*
-* Service for querying a SPARQL endpoint.
-* Takes the endpoint URL as a parameter.
-*/
-(function() {
-    'use strict';
-
-    /* eslint-disable angular/no-service-method */
-    angular.module('sparql')
-
-    .factory('SparqlService', SparqlService);
-
-    /* ngInject */
-    function SparqlService($http, $q) {
-        return function(endpointUrl) {
-
-            var executeQuery = function(sparqlQry) {
-                return $http.get(endpointUrl + '?query=' + encodeURIComponent(sparqlQry) + '&format=json');
-            };
-
-            return {
-                getObjects: function(sparqlQry) {
-                    // Query the endpoint and return a promise of the bindings.
-                    return executeQuery(sparqlQry).then(function(response) {
-                        return response.data.results.bindings;
-                    }, function(response) {
-                        return $q.reject(response.data);
-                    });
-                }
-            };
-        };
-    }
-})();
-
 /* Service for querying a SPARQL endpoint with paging support.
  * Takes the endpoint URL and a mapper object as parameters.
  * The mapper is an object that maps the SPARQL results to objects.
@@ -104,6 +64,12 @@
             }
         };
     }
+})();
+
+(function() {
+    'use strict';
+
+    angular.module('sparql', []);
 })();
 
 (function() {
@@ -460,6 +426,89 @@
                 return Math.ceil(count / pageSize) - 1;
             }
 
+        };
+    }
+})();
+
+/*
+ * Service for building pageable SPARQL queries.
+ */
+(function() {
+
+    'use strict';
+
+    angular.module('sparql')
+    .factory('QueryBuilderService', QueryBuilderService);
+
+    /* Provides a constructor for a query builder.
+    /* ngInject */
+    function QueryBuilderService() {
+
+        var resultSetQryShell =
+        '  SELECT DISTINCT ?id { ' +
+        '   <CONTENT> ' +
+        '  } ORDER BY <ORDER_BY> <PAGE> ';
+
+        var resultSetShell =
+        ' { ' +
+        '   <RESULT_SET> ' +
+        ' } FILTER(BOUND(?id)) ';
+
+        return QueryBuilder;
+
+        function QueryBuilder(prefixes) {
+
+            return {
+                buildQuery : buildQuery
+            };
+
+            function buildQuery(queryTemplate, resultSet, orderBy) {
+                var resultSetQry = resultSetQryShell
+                    .replace('<CONTENT>', resultSet)
+                    .replace('<ORDER_BY>', orderBy || '?id');
+                var resultSetPart = resultSetShell
+                    .replace('<RESULT_SET>', resultSetQry);
+                var query = prefixes + queryTemplate.replace('<RESULT_SET>', resultSetPart);
+
+                return {
+                    resultSetQuery: resultSetQry,
+                    query: query
+                };
+            }
+        }
+    }
+})();
+
+/*
+* Service for querying a SPARQL endpoint.
+* Takes the endpoint URL as a parameter.
+*/
+(function() {
+    'use strict';
+
+    /* eslint-disable angular/no-service-method */
+    angular.module('sparql')
+
+    .factory('SparqlService', SparqlService);
+
+    /* ngInject */
+    function SparqlService($http, $q) {
+        return function(endpointUrl) {
+
+            var executeQuery = function(sparqlQry) {
+                return $http.get(endpointUrl + '?query=' + encodeURIComponent(sparqlQry) + '&format=json');
+            };
+
+            return {
+                getObjects: function(sparqlQry) {
+                    // Query the endpoint and return a promise of the bindings.
+                    return executeQuery(sparqlQry).then(function(response) {
+                        return response.data.results.bindings;
+                    }, function(response) {
+                        return $q.reject(response.data);
+                    });
+                }
+            };
         };
     }
 })();
