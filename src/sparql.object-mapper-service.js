@@ -55,16 +55,7 @@
                 }
                 if (_.isArray(a)) {
                     if (_.isArray(b)) {
-                        var res = [];
-                        a.concat(b).forEach(function(val) {
-                            var value = _.find(res, function(earlierVal) {
-                                return _.isEqual(val, earlierVal);
-                            });
-                            if (!value) {
-                                res.push(val);
-                            }
-                        });
-                        return res;
+                        return  _.uniqWith(a.concat(b), _.isEqual);
                     }
                     if (_.find(a, function(val) { return _.isEqual(val, b); })) {
                         return a;
