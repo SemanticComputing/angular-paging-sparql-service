@@ -2,7 +2,7 @@
     'use strict';
 
     /*
-    * Service for transforming SPARQL result triples into more manageable objects.
+    * Service for transforming SPARQL results into more manageable objects.
     *
     * Author Erkki Heino.
     */
@@ -16,6 +16,7 @@
     /* ngInject */
     function objectMapperService(_) {
         ObjectMapper.prototype.makeObject = makeObject;
+        ObjectMapper.prototype.reviseObject = reviseObject;
         ObjectMapper.prototype.mergeObjects = mergeObjects;
         ObjectMapper.prototype.postProcess = postProcess;
         ObjectMapper.prototype.makeObjectList = makeObjectList;
@@ -26,7 +27,6 @@
         function ObjectMapper() {
             this.objectClass = Object;
         }
-
 
         function makeObject(obj) {
             // Flatten the obj. Discard everything except values.
@@ -41,6 +41,11 @@
             return o;
         }
 
+        function reviseObject(obj) {
+            // This is called with a reference to the original result objects
+            // as the second parameter.
+            return obj;
+        }
 
         function mergeObjects(first, second) {
             // Merge two objects into one object.
@@ -85,14 +90,16 @@
         }
 
         function makeObjectList(objects) {
-            // Create a list of the SPARQL results where triples with the same
-            // subject are merged into one object.
+            // Create a list of the SPARQL results where result rows with the same
+            // id are merged into one object.
             var self = this;
             var obj_list = _.transform(objects, function(result, obj) {
                 if (!obj.id) {
                     return null;
                 }
+                var orig = obj;
                 obj = self.makeObject(obj);
+                obj = self.reviseObject(obj, orig);
                 // Check if this object has been constructed earlier
                 var old = _.find(result, function(e) {
                     return e.id === obj.id;
@@ -110,7 +117,7 @@
         }
 
         function makeObjectListNoGrouping(objects) {
-            // Create a list of the SPARQL results where each triple is treated
+            // Create a list of the SPARQL results where each result row is treated
             // as a separated object.
             var self = this;
             var obj_list = _.transform(objects, function(result, obj) {
