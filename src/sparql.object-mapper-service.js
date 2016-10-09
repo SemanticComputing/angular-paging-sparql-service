@@ -35,7 +35,7 @@
             var o = new this.objectClass();
 
             _.forIn(obj, function(value, key) {
-                o[key] = value.value;
+                _.set(o, key.replace('__', '.'), value.value);
             });
 
             return o;
