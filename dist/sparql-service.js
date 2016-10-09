@@ -143,7 +143,10 @@
             var o = new this.objectClass();
 
             _.forIn(obj, function(value, key) {
-                o[key] = value.value;
+                // If the variable name contains "__", an object
+                // will be created as the value
+                // E.g. { place__id: '1' } -> { place: { id: '1' } }
+                _.set(o, key.replace('__', '.'), value.value);
             });
 
             return o;
@@ -163,16 +166,7 @@
                 }
                 if (_.isArray(a)) {
                     if (_.isArray(b)) {
-                        var res = [];
-                        a.concat(b).forEach(function(val) {
-                            var value = _.find(res, function(earlierVal) {
-                                return _.isEqual(val, earlierVal);
-                            });
-                            if (!value) {
-                                res.push(val);
-                            }
-                        });
-                        return res;
+                        return  _.uniqWith(a.concat(b), _.isEqual);
                     }
                     if (_.find(a, function(val) { return _.isEqual(val, b); })) {
                         return a;
