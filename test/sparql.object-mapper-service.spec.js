@@ -30,7 +30,11 @@
                 var mapped = objectMapperService.makeObject(obj);
                 var expectedPlace = {
                     id: 'http://ldf.fi/warsa/places/municipalities/m_place_119',
-                    label: 'Kauhajoki'
+                    label: 'Kauhajoki',
+                    point: {
+                        lat: '1',
+                        lon: '2'
+                    }
                 };
 
                 expect(mapped.place).toEqual(expectedPlace);
