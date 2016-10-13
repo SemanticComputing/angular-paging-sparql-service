@@ -36,7 +36,7 @@
             }
 
             function post(qry) {
-                var data = { query: qry };
+                var data = 'query=' + encodeURIComponent(qry);
                 var conf = { headers: {
                     'Accept': 'application/sparql-results+json',
                     'Content-type' : 'application/x-www-form-urlencoded'
