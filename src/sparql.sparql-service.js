@@ -11,12 +11,28 @@
     .factory('SparqlService', SparqlService);
 
     /* ngInject */
-    function SparqlService($http, $q) {
-        return function(endpointUrl) {
+    function SparqlService($http, $q, _) {
+        return function(configuration) {
 
-            var executeQuery = function(sparqlQry) {
-                return $http.get(endpointUrl + '?query=' + encodeURIComponent(sparqlQry) + '&format=json');
-            };
+            if (_.isString(configuration)) {
+                // Backwards compatibility
+                configuration = { endpointUrl: configuration };
+            }
+
+            var defaultConfig = { usePost: false };
+
+            var config = angular.extend({}, defaultConfig, configuration);
+
+            var executeQuery = config.usePost ? post : get;
+
+            function get(qry) {
+                return $http.get(config.endpointUrl + '?query=' + encodeURIComponent(qry) + '&format=json');
+            }
+
+            function post(qry) {
+                var data = { query: qry, format: 'json' };
+                return $http.post(config.endpointUrl, data);
+            }
 
             return {
                 getObjects: function(sparqlQry) {
