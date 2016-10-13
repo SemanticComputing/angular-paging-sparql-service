@@ -31,7 +31,10 @@
 
             function post(qry) {
                 var data = { query: qry };
-                var conf = { headers: { Accept: 'application/sparql-results+json' } };
+                var conf = { headers: {
+                    'Accept': 'application/sparql-results+json',
+                    'Content-type' : 'application/x-www-form-urlencoded'
+                } };
                 return $http.post(config.endpointUrl, data, conf);
             }
 
