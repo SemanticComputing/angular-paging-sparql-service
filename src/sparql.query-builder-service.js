@@ -1,14 +1,55 @@
-/*
- * Service for building pageable SPARQL queries.
- */
 (function() {
 
     'use strict';
 
+    /**
+    * @ngdoc service
+    * @name sparql.QueryBuilderService
+    * @description
+    * # QueryBuilderService
+    * Service for building pageable SPARQL queries.
+    * @param {string} prefixes prefixes used in the SPARQL query.
+    * @example
+    * <pre>
+    * var prefixes =
+    * 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> ' +
+    * 'PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> ';
+    *
+    * var queryBuilder = new QueryBuilderService(prefixes);
+    *
+    * var resultSet = '?id a <http://dbpedia.org/ontology/Writer> .';
+    *
+    * var queryTemplate =
+    * 'SELECT * WHERE { ' +
+    * ' <RESULT_SET ' +
+    * ' OPTIONAL { ?id rdfs:label ?label . } ' +
+    * '}';
+    *
+    * var qryObj = queryBuilder.buildQuery(qry, resultSet, '?id');
+    *
+    * // qryObj.query returns (without line breaks):
+    * // PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    * // PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    * // SELECT * WHERE {
+    * //   {
+    * //     SELECT DISTINCT ?id {
+    * //       ?id a <http://dbpedia.org/ontology/Writer>.
+    * //     } ORDER BY ?id <PAGE>
+    * //   }
+    * //   OPTIONAL { ?id rdfs:label ?label . }
+    * // }
+    *
+    * // qryObj.resultSetQry returns (without line breaks):
+    * // PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    * // PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    * // SELECT DISTINCT ?id {
+    * //   ?id a <http://dbpedia.org/ontology/Writer>.
+    * // } ORDER BY ?id <PAGE>
+    * </pre>
+    */
     angular.module('sparql')
     .factory('QueryBuilderService', QueryBuilderService);
 
-    /* Provides a constructor for a query builder.
     /* ngInject */
     function QueryBuilderService() {
 
@@ -30,6 +71,56 @@
                 buildQuery : buildQuery
             };
 
+            /**
+            * @ngdoc method
+            * @methodOf sparql.QueryBuilderService
+            * @name sparql.QueryBuilderService#buildQuery
+            * @description
+            * Build a pageable SPARQL query.
+            * @param {string} queryTemplate the SPARQL query with `<RESULT_SET>`
+            *   as a placeholder for the result set query, which is a subquery
+            *   that returns the distinct URIs of all the resources to be paged.
+            *   The resource URIs are assumed to bind to the variable `?id`.
+            * @param {string} resultSet constraints that result in the URIs of
+            *   the resources to page. The URIs should be bound as `?id`.
+            * @param {string} [orderBy] a SPARQL expression that can be used to
+            *   order the results. Default is '?id'.
+            * @returns {Object} a query object with the following properties:
+            *
+            *   - **query** - `{string}` - The constructed SPARQL queryTemplate (with a `<PAGE>` placeholder for paging).
+            *   - **resultSetQry** - `{string}` - The result set query.
+            * @example
+            * <pre>
+            * var resultSet = '?id a <http://dbpedia.org/ontology/Writer> .';
+            *
+            * var queryTemplate =
+            * 'SELECT * WHERE { ' +
+            * ' <RESULT_SET ' +
+            * ' OPTIONAL { ?id rdfs:label ?label . } ' +
+            * '}';
+            *
+            * var qryObj = queryBuilder.buildQuery(qry, resultSet, '?id');
+            *
+            * // qryObj.query returns (without line breaks):
+            * // PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            * // PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            * // SELECT * WHERE {
+            * //   {
+            * //     SELECT DISTINCT ?id {
+            * //       ?id a <http://dbpedia.org/ontology/Writer>.
+            * //     } ORDER BY ?id <PAGE>
+            * //   }
+            * //   OPTIONAL { ?id rdfs:label ?label . }
+            * // }
+            *
+            * // qryObj.resultSetQry returns (without line breaks):
+            * // PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            * // PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            * // SELECT DISTINCT ?id {
+            * //   ?id a <http://dbpedia.org/ontology/Writer>.
+            * // } ORDER BY ?id <PAGE>
+            * </pre>
+            */
             function buildQuery(queryTemplate, resultSet, orderBy) {
                 var resultSetQry = resultSetQryShell
                     .replace('<CONTENT>', resultSet)

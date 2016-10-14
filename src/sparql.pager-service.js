@@ -1,37 +1,29 @@
-/*
- * Service for paging SPARQL results.
- *
- * TODO: Fix race condition problem when changing the page size (perhaps don't
- *      allow it at all without a new instantiation?)
- */
 (function() {
 
     'use strict';
 
+    /**
+    * @ngdoc service
+    * @name sparql.PagerService
+    * @description
+    * # PagerService
+    * Service for paging SPARQL results.
+    *
+    * `AdvancedSparqlService` initializes this service, so manual init is not needed.
+    * @param {string} sparqlQry the SPARQL query.
+    * @param {string} resultSetQry the result set subquery part of the query - i.e. the part which
+     * defines the distinct objects that are being paged
+     * (containing `<PAGE>` as a placeholder for SPARQL limit and offset).
+    * @param {number} itemsPerPage the size of a single page.
+    * @param {number} getResults a function that returns a promise of results given a
+     * SPARQL query.
+    * @param {number} [pagesPerQuery] the number of pages to get per query. Default is 1.
+    * @param {number} [itemCount] is the total number of items that the sparqlQry returns.
+     * Optional, will be queried based on the resultSetQry if not given.
+    */
     angular.module('sparql')
     .factory('PagerService', PagerService);
 
-    /* Provides a constructor for a pager.
-     *
-     * Parameters:
-     *
-     * sparqlQry is the SPARQL query for the results (with a <PAGE> place holder
-     * for where the paging should happen).
-     *
-     * resultSetQry is the result set subquery part of the query - i.e. the part which
-     * defines the distinct objects that are being paged (with the <PAGE> place holder).
-     *
-     * itemsPerPage is the size of a single page.
-     *
-     * getResults is a function that returns a promise of results given a
-     * SPARQL query.
-     *
-     * pagesPerQuery is the number of pages fetched (and cached) per each page request.
-     * Optional, defaults to 1.
-     *
-     * itemCount is the total number of items that the sparqlQry returns.
-     * Optional, will be queried based on the resultSetQry if not given.
-     *
     /* ngInject */
     function PagerService($q, _) {
         return function(sparqlQry, resultSetQry, itemsPerPage, getResults, pagesPerQuery, itemCount) {
@@ -67,8 +59,22 @@
 
             /* Public API function definitions */
 
+            /**
+            * @ngdoc method
+            * @methodOf sparql.PagerService
+            * @name sparql.PagerService#getPage
+            * @description
+            * Get a specific "page" of data.
+            * @param {string} pageNo the number of the page to get (0-indexed).
+            * @param {number} [size] the page size. Changes the configured page size.
+            *   Using this parameter is not recommended, and may be removed in the future.
+            * @returns {promise} a promise of the page of the query results as objects.
+            */
             function getPage(pageNo, size) {
-                // Get a specific "page" of data.
+                /*
+                * TODO: Fix race condition problem when changing the page size (perhaps don't
+                *      allow it at all without a new instantiation?)
+                */
                 // Currently prone to race conditions when using the size
                 // parameter to change the page size.
 
@@ -116,8 +122,17 @@
                 });
             }
 
+            /**
+            * @ngdoc method
+            * @methodOf sparql.PagerService
+            * @name sparql.PagerService#getAllSequentially
+            * @description
+            * Get all results sequentially in chunks.
+            * @param {number} chunkSize the page size.
+            * @returns {promise} a promise of the query results as objects.
+            * The promise will be notified between receiving chunks.
+            */
             function getAllSequentially(chunkSize) {
-                // Get all of the data in chunks sequentially.
                 var all = [];
                 var res = $q.defer();
                 var chain = $q.when();
@@ -140,10 +155,15 @@
                 });
             }
 
+            /**
+            * @ngdoc method
+            * @methodOf sparql.PagerService
+            * @name sparql.PagerService#getTotalCount
+            * @description
+            * Get the total count of results.
+            * @returns {promise} a promise of total count of the query results.
+            */
             function getTotalCount() {
-                // Get the total number of items that the result set query returns.
-                // Returns a promise.
-
                 // Get cached count if available.
                 if (count) {
                     maxPage = calculateMaxPage(count, pageSize);
@@ -157,6 +177,14 @@
                 });
             }
 
+            /**
+            * @ngdoc method
+            * @methodOf sparql.PagerService
+            * @name sparql.PagerService#getMaxPageNo
+            * @description
+            * Get the number of the last page of results.
+            * @returns {promise} a promise of the number of the last page.
+            */
             function getMaxPageNo() {
                 return getTotalCount().then(function(count) {
                     return calculateMaxPage(count, pageSize);
