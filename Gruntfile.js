@@ -16,6 +16,9 @@ module.exports = function(grunt) {
         },
         ngdocs: {
             all: ['src/**/*.js'],
+            options: {
+                title: 'SPARQL Service'
+            },
             sourceLink: true
         }
     });
