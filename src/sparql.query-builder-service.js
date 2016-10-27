@@ -3,12 +3,19 @@
     'use strict';
 
     /**
-    * @ngdoc service
+    * @ngdoc object
     * @name sparql.QueryBuilderService
+    */
+    angular.module('sparql')
+    .factory('QueryBuilderService', QueryBuilderService);
+
+    /**
+    * @ngdoc function
+    * @name sparql.QueryBuilderService
+    * @constructor
     * @description
-    * # QueryBuilderService
     * Service for building pageable SPARQL queries.
-    * @param {string} prefixes prefixes used in the SPARQL query.
+    * @param {string} Prefixes prefixes used in the SPARQL query.
     * @example
     * <pre>
     * var prefixes =
@@ -47,9 +54,6 @@
     * // } ORDER BY ?id <PAGE>
     * </pre>
     */
-    angular.module('sparql')
-    .factory('QueryBuilderService', QueryBuilderService);
-
     /* ngInject */
     function QueryBuilderService() {
 
@@ -77,13 +81,13 @@
             * @name sparql.QueryBuilderService#buildQuery
             * @description
             * Build a pageable SPARQL query.
-            * @param {string} queryTemplate the SPARQL query with `<RESULT_SET>`
+            * @param {string} queryTemplate The SPARQL query with `<RESULT_SET>`
             *   as a placeholder for the result set query, which is a subquery
             *   that returns the distinct URIs of all the resources to be paged.
             *   The resource URIs are assumed to bind to the variable `?id`.
-            * @param {string} resultSet constraints that result in the URIs of
+            * @param {string} resultSet Constraints that result in the URIs of
             *   the resources to page. The URIs should be bound as `?id`.
-            * @param {string} [orderBy] a SPARQL expression that can be used to
+            * @param {string} [orderBy] A SPARQL expression that can be used to
             *   order the results. Default is '?id'.
             * @returns {Object} a query object with the following properties:
             *

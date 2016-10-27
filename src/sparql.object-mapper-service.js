@@ -7,7 +7,6 @@
     * @ngdoc service
     * @name sparql.objectMapperService
     * @description
-    * # objectMapperService
     * Service for transforming SPARQL results into more manageable objects.
     *
     * The service can be extended via prototype inheritance by re-implementing

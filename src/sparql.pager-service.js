@@ -3,29 +3,34 @@
     'use strict';
 
     /**
-    * @ngdoc service
+    * @ngdoc object
     * @name sparql.PagerService
-    * @description
-    * # PagerService
-    * Service for paging SPARQL results.
-    *
-    * `AdvancedSparqlService` initializes this service, so manual init is not needed.
-    * @param {string} sparqlQry the SPARQL query.
-    * @param {string} resultSetQry the result set subquery part of the query - i.e. the part which
-     * defines the distinct objects that are being paged
-     * (containing `<PAGE>` as a placeholder for SPARQL limit and offset).
-    * @param {number} itemsPerPage the size of a single page.
-    * @param {number} getResults a function that returns a promise of results given a
-     * SPARQL query.
-    * @param {number} [pagesPerQuery] the number of pages to get per query. Default is 1.
-    * @param {number} [itemCount] is the total number of items that the sparqlQry returns.
-     * Optional, will be queried based on the resultSetQry if not given.
     */
     angular.module('sparql')
     .factory('PagerService', PagerService);
 
     /* ngInject */
     function PagerService($q, _) {
+
+        /**
+        * @ngdoc function
+        * @name sparql.PagerService
+        * @constructor
+        * @description
+        * Service for paging SPARQL results.
+        *
+        * {@link sparql.AdvancedSparqlService `AdvancedSparqlService`} initializes this service, so manual init is not needed.
+        * @param {string} sparqlQry The SPARQL query.
+        * @param {string} resultSetQry The result set subquery part of the query - i.e. the part which
+        * defines the distinct objects that are being paged
+        * (containing `<PAGE>` as a placeholder for SPARQL limit and offset).
+        * @param {number} itemsPerPage The size of a single page.
+        * @param {function} getResults A function that returns a promise of results given a
+        * SPARQL query.
+        * @param {number} [pagesPerQuery=1] The number of pages to get per query.
+        * @param {number} [itemCount] The total number of items that the sparqlQry returns.
+        * Optional, will be queried based on the resultSetQry if not given.
+        */
         return function(sparqlQry, resultSetQry, itemsPerPage, getResults, pagesPerQuery, itemCount) {
 
             var self = this;
@@ -65,10 +70,10 @@
             * @name sparql.PagerService#getPage
             * @description
             * Get a specific "page" of data.
-            * @param {string} pageNo the number of the page to get (0-indexed).
-            * @param {number} [size] the page size. Changes the configured page size.
+            * @param {string} pageNo The number of the page to get (0-indexed).
+            * @param {number} [size] The page size. Changes the configured page size.
             *   Using this parameter is not recommended, and may be removed in the future.
-            * @returns {promise} a promise of the page of the query results as objects.
+            * @returns {promise} A promise of the page of the query results as objects.
             */
             function getPage(pageNo, size) {
                 /*
@@ -128,8 +133,8 @@
             * @name sparql.PagerService#getAllSequentially
             * @description
             * Get all results sequentially in chunks.
-            * @param {number} chunkSize the page size.
-            * @returns {promise} a promise of the query results as objects.
+            * @param {number} chunkSize The amount of results to get per query.
+            * @returns {promise} A promise of the query results as objects.
             * The promise will be notified between receiving chunks.
             */
             function getAllSequentially(chunkSize) {
@@ -161,7 +166,7 @@
             * @name sparql.PagerService#getTotalCount
             * @description
             * Get the total count of results.
-            * @returns {promise} a promise of total count of the query results.
+            * @returns {promise} A promise of total count of the query results.
             */
             function getTotalCount() {
                 // Get cached count if available.
@@ -183,7 +188,7 @@
             * @name sparql.PagerService#getMaxPageNo
             * @description
             * Get the number of the last page of results.
-            * @returns {promise} a promise of the number of the last page.
+            * @returns {promise} A promise of the number of the last page.
             */
             function getMaxPageNo() {
                 return getTotalCount().then(function(count) {

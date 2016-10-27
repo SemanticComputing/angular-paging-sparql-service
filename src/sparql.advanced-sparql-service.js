@@ -3,48 +3,53 @@
     'use strict';
 
     /**
-    * @ngdoc service
+    * @ngdoc object
     * @name sparql.AdvancedSparqlService
     * @requires sparql.SparqlService
     * @requires sparql.PagerService
     * @requires sparql.objectMapperService
-    * @description
-    * # AdvancedSparqlService
-    * Service for querying a SPARQL endpoint, with paging support.
-    * @param {Object|string} configuration Configuration object or the SPARQL endpoit URL as a string.
-    *   The object has the following properties:
-    *
-    *   - **endpointUrl** - `{string}` - The SPARQL endpoint URL.
-    *   - **usePost** - `{boolean}` - If truthy, use POST instead of GET. Default is `false`.
-    * @param {Object} [mapper=objectMapperService] Object that maps the SPARQL results as objects.
-    * The mapper should provide 'makeObjectList' and 'makeObjectListNoGrouping'
-    * functions that take the SPARQL results as parameter and return the mapped objects.
-    * @example
-    * <pre>
-    * var config = { endpointUrl: 'http://dbpedia.org/sparql', usePost: false };
-    * var endpoint = new AdvancedSparqlServiceSparqlService(config, objectMapperService);
-    * // Or using just a string parameter:
-    * endpoint = new AdvancedSparqlService('http://dbpedia.org/sparql');
-    *
-    * var resultSet = '?id a <http://dbpedia.org/ontology/Writer> .';
-    *
-    * var queryTemplate =
-    * 'SELECT * WHERE { ' +
-    * ' <RESULT_SET ' +
-    * ' OPTIONAL { ?id rdfs:label ?label . } ' +
-    * '}';
-    *
-    * var queryBuilder = new QueryBuilderService(prefixes);
-    * var qryObj = queryBuilder.buildQuery(qry, resultSet, '?id');
-    *
-    * var resultPromise = endpoint.getObjects(qryObj.query, 10, qryObj.resultSetQry, 1);
-    * </pre>
     */
     angular.module('sparql')
     .factory('AdvancedSparqlService', AdvancedSparqlService);
 
     /* ngInject */
     function AdvancedSparqlService($http, $q, SparqlService, PagerService, objectMapperService) {
+
+        /**
+        * @ngdoc function
+        * @name sparql.AdvancedSparqlService
+        * @constructor
+        * @description
+        * Service for querying a SPARQL endpoint, with paging support.
+        * @param {Object|string} configuration Configuration object or the SPARQL endpoit URL as a string.
+        *   The object has the following properties:
+        *
+        *   - **endpointUrl** - `{string}` - The SPARQL endpoint URL.
+        *   - **usePost** - `{boolean}` - If truthy, use POST instead of GET. Default is `false`.
+        * @param {Object} [mapper=objectMapperService] Object that maps the SPARQL results as objects.
+        * The mapper should provide 'makeObjectList' and 'makeObjectListNoGrouping'
+        * functions that take the SPARQL results as parameter and return the mapped objects.
+        * @example
+        * <pre>
+        * var config = { endpointUrl: 'http://dbpedia.org/sparql', usePost: false };
+        * var endpoint = new AdvancedSparqlServiceSparqlService(config, objectMapperService);
+        * // Or using just a string parameter:
+        * endpoint = new AdvancedSparqlService('http://dbpedia.org/sparql');
+        *
+        * var resultSet = '?id a <http://dbpedia.org/ontology/Writer> .';
+        *
+        * var queryTemplate =
+        * 'SELECT * WHERE { ' +
+        * ' <RESULT_SET ' +
+        * ' OPTIONAL { ?id rdfs:label ?label . } ' +
+        * '}';
+        *
+        * var queryBuilder = new QueryBuilderService(prefixes);
+        * var qryObj = queryBuilder.buildQuery(qry, resultSet, '?id');
+        *
+        * var resultPromise = endpoint.getObjects(qryObj.query, 10, qryObj.resultSetQry, 1);
+        * </pre>
+        */
         return function(configuration, mapper) {
             var endpoint = new SparqlService(configuration);
 

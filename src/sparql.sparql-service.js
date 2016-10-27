@@ -4,10 +4,17 @@
     /* eslint-disable angular/no-service-method */
 
     /**
-    * @ngdoc service
+    * @ngdoc object
     * @name sparql.SparqlService
+    */
+    angular.module('sparql')
+    .factory('SparqlService', SparqlService);
+
+    /**
+    * @ngdoc function
+    * @name sparql.SparqlService
+    * @constructor
     * @description
-    * # SparqlService
     * Service for querying a SPARQL endpoint.
     * @param {Object|string} configuration object or the SPARQL endpoit URL as a string.
     *   The object has the following properties:
@@ -30,9 +37,6 @@
     * var resultPromise = endpoint.getObjects(qry);
     * </pre>
     */
-    angular.module('sparql')
-    .factory('SparqlService', SparqlService);
-
     /* ngInject */
     function SparqlService($http, $q, _) {
         return function(configuration) {
