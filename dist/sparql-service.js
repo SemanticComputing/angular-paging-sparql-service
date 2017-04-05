@@ -348,6 +348,7 @@
         ObjectMapper.prototype.makeObject = makeObject;
         ObjectMapper.prototype.reviseObject = reviseObject;
         ObjectMapper.prototype.mergeObjects = mergeObjects;
+        ObjectMapper.prototype.mergeObjectToList = mergeObjectToList;
         ObjectMapper.prototype.postProcess = postProcess;
 
         /* API methods */
@@ -372,27 +373,16 @@
         */
         function makeObjectList(objects) {
             var self = this;
-            var obj_list = _.transform(objects, function(result, obj) {
+            var objList = _.transform(objects, function(result, obj) {
                 if (!obj.id) {
                     return null;
                 }
                 var orig = obj;
                 obj = self.makeObject(obj);
                 obj = self.reviseObject(obj, orig);
-                // Check if this object has been constructed earlier
-                var old = _.find(result, function(e) {
-                    return e.id === obj.id;
-                });
-                if (old) {
-                    // Merge this triple into the object constructed earlier
-                    self.mergeObjects(old, obj);
-                }
-                else {
-                    // This is the first triple related to the id
-                    result.push(obj);
-                }
+                self.mergeObjectToList(result, obj);
             });
-            return self.postProcess(obj_list);
+            return self.postProcess(objList);
         }
 
         /**
@@ -459,6 +449,33 @@
         /**
         * @ngdoc method
         * @methodOf sparql.objectMapperService
+        * @name sparql.objectMapperService#mergeObjectToList
+        * @param {Array} objectList A list to which the object should be added.
+        * @param {Object} obj The object to add to the list.
+        * @returns {Array} The merged object list.
+        * @description
+        * Add the given object to the given list, merging the object to an object
+        * in the list if they have the same id.
+        */
+        function mergeObjectToList(objectList, obj) {
+            // Check if this object has been constructed earlier
+            var old = _.findLast(objectList, function(e) {
+                return e.id === obj.id;
+            });
+            if (!old) {
+                // This is the first triple related to the id
+                objectList.push(obj);
+                return objectList;
+            }
+            // Merge this triple into the object constructed earlier
+            this.mergeObjects(old, obj);
+            return objectList;
+        }
+
+
+        /**
+        * @ngdoc method
+        * @methodOf sparql.objectMapperService
         * @name sparql.objectMapperService#mergeObjects
         * @param {Object} first An object as returned by {@link sparql.objectMapperService#makeObject makeObject}.
         * @param {Object} second The object to merge with the first.
@@ -468,18 +485,10 @@
         */
         function mergeObjects(first, second) {
             // Merge two objects into one object.
+            var self = this;
             return _.mergeWith(first, second, function(a, b) {
                 if (_.isEqual(a, b)) {
                     return a;
-                }
-                if (_.isArray(a)) {
-                    if (_.isArray(b)) {
-                        return  _.uniqWith(a.concat(b), _.isEqual);
-                    }
-                    if (_.find(a, function(val) { return _.isEqual(val, b); })) {
-                        return a;
-                    }
-                    return a.concat(b);
                 }
                 if (a && !b) {
                     return a;
@@ -487,11 +496,34 @@
                 if (b && !a) {
                     return b;
                 }
+                if (_.isArray(a)) {
+                    if (_.isArray(b)) {
+                        _.forEach(b, function(bVal) {
+                            if (_.isObject(bVal) && bVal.id) {
+                                self.mergeObjectToList(a, bVal);
+                            } else {
+                                if (!_.find(a, function(val) { return _.isEqual(val, bVal); })) {
+                                    a = a.concat(bVal);
+                                }
+                            }
+                        });
+                        return a;
+                    }
+                    if (_.isObject(b) && b.id) {
+                        return self.mergeObjectToList(a, b);
+                    }
+                    if (_.find(a, function(val) { return _.isEqual(val, b); })) {
+                        return a;
+                    }
+                    return a.concat(b);
+                }
                 if (_.isArray(b)) {
                     return b.concat(a);
                 }
-
-                return [a, b];
+                if (!(a.id && b.id && a.id === b.id)) {
+                    return [a, b];
+                }
+                return self.mergeObjects(a, b);
             });
         }
 
