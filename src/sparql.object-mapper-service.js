@@ -24,7 +24,7 @@
         ObjectMapper.prototype.makeObject = makeObject;
         ObjectMapper.prototype.reviseObject = reviseObject;
         ObjectMapper.prototype.mergeObjects = mergeObjects;
-        ObjectMapper.prototype.mergeObjectToList = mergeObjectToList;
+        ObjectMapper.prototype.mergeValueToList = mergeValueToList;
         ObjectMapper.prototype.postProcess = postProcess;
 
         /* API methods */
@@ -56,7 +56,7 @@
                 var orig = obj;
                 obj = self.makeObject(obj);
                 obj = self.reviseObject(obj, orig);
-                self.mergeObjectToList(result, obj);
+                self.mergeValueToList(result, obj);
             });
             return self.postProcess(objList);
         }
@@ -125,29 +125,38 @@
         /**
         * @ngdoc method
         * @methodOf sparql.objectMapperService
-        * @name sparql.objectMapperService#mergeObjectToList
-        * @param {Array} objectList A list to which the object should be added.
-        * @param {Object} obj The object to add to the list.
-        * @returns {Array} The merged object list.
+        * @name sparql.objectMapperService#mergeValueToList
+        * @param {Array} valueList A list to which the value should be added.
+        * @param {Object} value The value to add to the list.
+        * @returns {Array} The merged list.
         * @description
-        * Add the given object to the given list, merging the object to an object
-        * in the list if they have the same id.
+        * Add the given value to the given list, merging an object value to and
+        * object in the list if both have the same id attribute.
+        * A value already present in valueList is discarded.
         */
-        function mergeObjectToList(objectList, obj) {
-            // Check if this object has been constructed earlier
-            var old = _.findLast(objectList, function(e) {
-                return e.id === obj.id;
-            });
-            if (!old) {
-                // This is the first triple related to the id
-                objectList.push(obj);
-                return objectList;
+        function mergeValueToList(valueList, value) {
+            var old;
+            if (_.isObject(value) && value.id) {
+                // Check if this object has been constructed earlier
+                old = _.findLast(valueList, function(e) {
+                    return e.id === value.id;
+                });
+                if (old) {
+                    // Merge this object to the object constructed earlier
+                    this.mergeObjects(old, value);
+                }
+            } else {
+                // Check if this value is present in the list
+                old = _.findLast(valueList, function(e) {
+                    return _.isEqual(e, value);
+                });
             }
-            // Merge this triple into the object constructed earlier
-            this.mergeObjects(old, obj);
-            return objectList;
+            if (!old) {
+                // This is a distinct value
+                valueList.push(value);
+            }
+            return valueList;
         }
-
 
         /**
         * @ngdoc method
@@ -161,46 +170,36 @@
         */
         function mergeObjects(first, second) {
             // Merge two objects into one object.
+            return _.mergeWith(first, second, merger.bind(this));
+        }
+
+        function merger(a, b) {
             var self = this;
-            return _.mergeWith(first, second, function(a, b) {
-                if (_.isEqual(a, b)) {
-                    return a;
-                }
-                if (a && !b) {
-                    return a;
-                }
-                if (b && !a) {
-                    return b;
-                }
-                if (_.isArray(a)) {
-                    if (_.isArray(b)) {
-                        _.forEach(b, function(bVal) {
-                            if (_.isObject(bVal) && bVal.id) {
-                                self.mergeObjectToList(a, bVal);
-                            } else {
-                                if (!_.find(a, function(val) { return _.isEqual(val, bVal); })) {
-                                    a = a.concat(bVal);
-                                }
-                            }
-                        });
-                        return a;
-                    }
-                    if (_.isObject(b) && b.id) {
-                        return self.mergeObjectToList(a, b);
-                    }
-                    if (_.find(a, function(val) { return _.isEqual(val, b); })) {
-                        return a;
-                    }
-                    return a.concat(b);
-                }
+            if (_.isEqual(a, b)) {
+                return a;
+            }
+            if (a && !b) {
+                return a;
+            }
+            if (b && !a) {
+                return b;
+            }
+            if (_.isArray(a)) {
                 if (_.isArray(b)) {
-                    return b.concat(a);
+                    b.forEach(function(bVal) {
+                        return self.mergeValueToList(a, bVal);
+                    });
+                    return a;
                 }
-                if (!(a.id && b.id && a.id === b.id)) {
-                    return [a, b];
-                }
-                return self.mergeObjects(a, b);
-            });
+                return self.mergeValueToList(a, b);
+            }
+            if (_.isArray(b)) {
+                return self.mergeValueToList(b, a);
+            }
+            if (!(_.isObject(a) && _.isObject(b) && a.id === b.id)) {
+                return [a, b];
+            }
+            return self.mergeObjects(a, b);
         }
 
         /**

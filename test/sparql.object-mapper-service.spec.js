@@ -280,9 +280,30 @@
 
                 expect(merged).toEqual(expected);
             });
+
+            it('can handle deep object values', function() {
+                second.id = first.id;
+
+                first.place = {};
+                second.place = {};
+
+                for (var i = 0; i < 10; i++) {
+                    _.set(first, _.repeat('place.', i+1) + 'id', i);
+                    _.set(second, _.repeat('place.', i+1) + 'id', i);
+                }
+
+                second.place.place.place = { id: 'other' };
+
+                var expected = _.cloneDeep(first);
+                expected.place.place.place = [expected.place.place.place, { id: 'other' }];
+
+                var merged = objectMapperService.mergeObjects(first, second);
+
+                expect(merged).toEqual(expected);
+            });
         });
 
-        describe('mergeObjectToList', function() {
+        describe('mergeValueToList', function() {
             var firstPlace, secondPlace, thirdPlace, first, second, third;
             beforeEach(function() {
                 firstPlace = {
@@ -338,7 +359,7 @@
                     }
                 ];
 
-                var merged = objectMapperService.mergeObjectToList([_.cloneDeep(first),
+                var merged = objectMapperService.mergeValueToList([_.cloneDeep(first),
                     _.cloneDeep(second)], _.cloneDeep(third));
 
                 expect(merged).toEqual(expected);
@@ -350,8 +371,58 @@
 
                 var expected = [first, second, third];
 
-                var merged = objectMapperService.mergeObjectToList([_.cloneDeep(first),
+                var merged = objectMapperService.mergeValueToList([_.cloneDeep(first),
                     _.cloneDeep(second)], _.cloneDeep(third));
+
+                expect(merged).toEqual(expected);
+            });
+
+            it('works with non-object-mapper-object values', function() {
+                var values = ['hello', 'hi'];
+                var merged = objectMapperService.mergeValueToList(values, 'hola');
+                var expected = ['hello', 'hi', 'hola'];
+
+                expect(merged).toEqual(expected);
+
+                values = ['hello', 'hi'];
+                merged = objectMapperService.mergeValueToList(values, 'hello');
+                expected = ['hello', 'hi'];
+
+                expect(merged).toEqual(expected);
+
+                values = ['hello', 'hi'];
+                merged = objectMapperService.mergeValueToList(values, 'hi');
+                expected = ['hello', 'hi'];
+
+                expect(merged).toEqual(expected);
+
+                var now = new Date();
+
+                values = [now];
+                merged = objectMapperService.mergeValueToList(values, 'hi');
+                expected = [now, 'hi'];
+
+                expect(merged).toEqual(expected);
+
+                var later = new Date();
+
+                values = [now, later];
+                merged = objectMapperService.mergeValueToList(values, now);
+                expected = [now, later];
+
+                expect(merged).toEqual(expected);
+            });
+
+            it('does not merge objects that do not have an id attribute', function() {
+                var values = [{ some: 'val', other: 'value' }, { some: 'val', something: 'other' }];
+                var merged = objectMapperService.mergeValueToList(values, { new: 'obj' });
+                var expected = [{ some: 'val', other: 'value' }, { some: 'val', something: 'other' }, { new: 'obj' }];
+
+                expect(merged).toEqual(expected);
+
+                values = [{ some: 'val', other: 'value' }, { new: 'obj' }];
+                merged = objectMapperService.mergeValueToList(values, { some: 'val', something: 'other' });
+                expected = [{ some: 'val', other: 'value' }, { new: 'obj' }, { some: 'val', something: 'other' }];
 
                 expect(merged).toEqual(expected);
             });
