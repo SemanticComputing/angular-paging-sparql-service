@@ -45,7 +45,7 @@ NG_DOCS={
       "type": "service",
       "moduleName": "sparql",
       "shortDescription": "Service for transforming SPARQL results into more manageable objects.",
-      "keywords": "actual add api assume candidates defaul discard extended flatten hook implementation inheritance list makeobject makeobjectlist makeobjectlistnogrouping manageable map mapped maps merge merged mergeobjects mergeobjecttolist merges merging method methods no-op obj object objectlist objectmapperservice objects original postprocess processed processing property prototype re-implementation re-implementing result return returned revised reviseobject revising row rows second service single sparql transforming values"
+      "keywords": "actual add api assume attribute candidates defaul discard discarded extended flatten hook implementation inheritance list makeobject makeobjectlist makeobjectlistnogrouping manageable map mapped maps merge merged mergeobjects merges mergevaluetolist merging method methods no-op obj object objectmapperservice objects original postprocess processed processing property prototype re-implementation re-implementing result return returned revised reviseobject revising row rows second service single sparql transforming valuelist values"
     },
     {
       "section": "api",
