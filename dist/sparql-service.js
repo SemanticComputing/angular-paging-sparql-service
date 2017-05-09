@@ -587,7 +587,9 @@
             self.getMaxPageNo = getMaxPageNo;
             // getPage(pageNumber) -> promise
             self.getPage = getPage;
-            // getAllSequentially() -> promise
+            // getAll() -> promise
+            self.getAll = getAll;
+            // getAllSequentially(chunkSize) -> promise
             self.getAllSequentially = getAllSequentially;
 
             // How many pages to get with one query.
@@ -697,10 +699,26 @@
                         });
                     }
                     chain.then(function() {
+                        fillPages(all);
                         res.resolve(all);
                     });
 
                     return res.promise;
+                });
+            }
+
+            /**
+            * @ngdoc method
+            * @methodOf sparql.PagerService
+            * @name sparql.PagerService#getAll
+            * @description
+            * Get all results.
+            * @returns {promise} A promise of the query results as objects.
+            */
+            function getAll() {
+                return getResults(pagify(sparqlQry, 0, 0)).then(function(results) {
+                    fillPages(results);
+                    return results;
                 });
             }
 
@@ -742,11 +760,23 @@
 
             /* Internal helper functions */
 
+            function fillPages(results) {
+                pages = _.map(_.chunk(results, pageSize), function(res) {
+                    var promise = $q.defer();
+                    promise.resolve(res);
+                    return promise;
+                });
+                count = results.length;
+            }
+
             function pagify(sparqlQry, page, pageSize, pagesPerQuery) {
                 // Form the query for the given page.
-                var query = sparqlQry.replace('<PAGE>',
+                if (pageSize === 0) {
+                    return sparqlQry.replace('<PAGE>', '');
+                } else {
+                    return sparqlQry.replace('<PAGE>',
                         ' LIMIT ' + pageSize * pagesPerQuery + ' OFFSET ' + (page * pageSize));
-                return query;
+                }
             }
 
             function countify(sparqlQry) {
@@ -910,7 +940,7 @@
             *
             * var queryTemplate =
             * 'SELECT * WHERE { ' +
-            * ' <RESULT_SET ' +
+            * ' <RESULT_SET> ' +
             * ' OPTIONAL { ?id rdfs:label ?label . } ' +
             * '}';
             *

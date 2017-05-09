@@ -62,7 +62,7 @@ NG_DOCS={
       "type": "function",
       "moduleName": "sparql",
       "shortDescription": "Service for paging SPARQL results.",
-      "keywords": "advancedsparqlservice amount api based changes chunks chunksize configured count data defines distinct function future getallsequentially getmaxpageno getpage getresults gettotalcount init initializes items itemsperpage limit manual method needed notified number objects offset optional paged pageno pagerservice paging parameter placeholder promise queried query receiving recommended removed result resultsetqry returns sequentially service set single size sparql sparqlqry specific subquery total"
+      "keywords": "advancedsparqlservice amount api based changes chunks chunksize configured count data defines distinct function future getall getallsequentially getmaxpageno getpage getresults gettotalcount init initializes items itemsperpage limit manual method needed notified number objects offset optional paged pageno pagerservice paging parameter placeholder promise queried query receiving recommended removed result resultsetqry returns sequentially service set single size sparql sparqlqry specific subquery total"
     },
     {
       "section": "api",
