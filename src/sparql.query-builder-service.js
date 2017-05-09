@@ -99,7 +99,7 @@
             *
             * var queryTemplate =
             * 'SELECT * WHERE { ' +
-            * ' <RESULT_SET ' +
+            * ' <RESULT_SET> ' +
             * ' OPTIONAL { ?id rdfs:label ?label . } ' +
             * '}';
             *
