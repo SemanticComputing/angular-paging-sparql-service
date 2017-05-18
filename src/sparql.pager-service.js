@@ -54,9 +54,13 @@
             /* Internal vars */
 
             // The total number of items.
-            var count = itemCount || undefined;
+            var count = undefined;
+            if (angular.isDefined(itemCount)) {
+                count = $q.defer();
+                count.resolve(itemCount);
+            }
             // The number of the last page.
-            var maxPage = count ? calculateMaxPage(count, pageSize) : undefined;
+            var maxPage = itemCount ? calculateMaxPage(itemCount, pageSize) : undefined;
             // Cached pages.
             var pages = [];
 
@@ -100,7 +104,7 @@
                 if (pageNo < 0) {
                     return $q.when([]);
                 }
-                return getTotalCount().then(function() {
+                return getTotalCount().then(function(count) {
                     if (pageNo > maxPage || !count) {
                         return $q.when([]);
                     }
@@ -187,16 +191,18 @@
             * @returns {promise} A promise of total count of the query results.
             */
             function getTotalCount() {
-                // Get cached count if available.
-                if (count) {
-                    maxPage = calculateMaxPage(count, pageSize);
-                    return $q.when(count);
+                if (angular.isDefined(count)) {
+                    return count.promise.then(function(value) {
+                        maxPage = calculateMaxPage(value, pageSize);
+                        return value;
+                    });
                 }
+                count = $q.defer();
                 return getResults(countQry, true).then(function(results) {
-                    // Cache the count.
-                    count = parseInt(results[0].count.value);
-                    maxPage = calculateMaxPage(count, pageSize);
-                    return count;
+                    var value = parseInt(results[0].count.value);
+                    count.resolve(value);
+                    maxPage = calculateMaxPage(value, pageSize);
+                    return value;
                 });
             }
 
