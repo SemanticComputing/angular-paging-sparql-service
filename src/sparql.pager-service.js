@@ -228,7 +228,10 @@
                     promise.resolve(res);
                     return promise;
                 });
-                count = results.length;
+                if (angular.isUndefined(count)) {
+                    count = $q.defer();
+                }
+                count.resolve(results.length);
             }
 
             function pagify(sparqlQry, page, pageSize, pagesPerQuery) {
