@@ -36,7 +36,7 @@ NG_DOCS={
       "type": "function",
       "moduleName": "sparql",
       "shortDescription": "Service for querying a SPARQL endpoint, with paging support.",
-      "keywords": "advancedsparqlservice advancedsparqlservicesparqlservice api buildquery config configuration convenience default defines distinct endpoint endpointurl endpoit false function functions getobjects getobjectsnogrouping gicen http init instance list makeobjectlist makeobjectlistnogrouping mapped mapper maps method note number object objectmapperservice objects optional order org paged pagerservice pagesize paging parameter placeholder post prefix prefixes promise properties provide qry qryobj query querybuilder querybuilderservice querying querytemplate rdf rdfs required resources result resultpromise resultset resultsetqry return returns select service set size sparql sparqlqry string support truthy uris url usepost var w3"
+      "keywords": "advancedsparqlservice api buildquery config configuration convenience default defines distinct endpoint endpointurl endpoit false function functions getobjects getobjectsnogrouping gicen http init instance list makeobjectlist makeobjectlistnogrouping mapped mapper maps method note number object objectmapperservice objects optional order org paged pagerservice pagesize paging parameter placeholder post prefix prefixes promise properties provide qry qryobj query querybuilder querybuilderservice querying querytemplate rdf rdfs required resources result resultpromise resultset resultsetqry return returns select service set size sparql sparqlqry string support truthy uris url usepost var w3"
     },
     {
       "section": "api",
