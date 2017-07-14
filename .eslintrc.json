@@ -4,7 +4,11 @@
             2,
             4,
             {
-                "SwitchCase": 1
+                "SwitchCase": 1,
+                "MemberExpression": "off",
+                "FunctionDeclaration": {
+                    "parameters": 2
+                }
             }
         ],
         "quotes": [
