@@ -8,29 +8,28 @@
     */
     angular.module('sparql')
     .factory('PagerService', PagerService);
+    PagerService.$inject = ['$q', '_'];
 
-    /* ngInject */
+    /**
+    * @ngdoc function
+    * @name sparql.PagerService
+    * @constructor
+    * @description
+    * Service for paging SPARQL results.
+    *
+    * {@link sparql.AdvancedSparqlService `AdvancedSparqlService`} initializes this service, so manual init is not needed.
+    * @param {string} sparqlQry The SPARQL query.
+    * @param {string} resultSetQry The result set subquery part of the query - i.e. the part which
+    * defines the distinct objects that are being paged
+    * (containing `<PAGE>` as a placeholder for SPARQL limit and offset).
+    * @param {number} itemsPerPage The size of a single page.
+    * @param {function} getResults A function that returns a promise of results given a
+    * SPARQL query.
+    * @param {number} [pagesPerQuery=1] The number of pages to get per query.
+    * @param {number} [itemCount] The total number of items that the sparqlQry returns.
+    * Optional, will be queried based on the resultSetQry if not given.
+    */
     function PagerService($q, _) {
-
-        /**
-        * @ngdoc function
-        * @name sparql.PagerService
-        * @constructor
-        * @description
-        * Service for paging SPARQL results.
-        *
-        * {@link sparql.AdvancedSparqlService `AdvancedSparqlService`} initializes this service, so manual init is not needed.
-        * @param {string} sparqlQry The SPARQL query.
-        * @param {string} resultSetQry The result set subquery part of the query - i.e. the part which
-        * defines the distinct objects that are being paged
-        * (containing `<PAGE>` as a placeholder for SPARQL limit and offset).
-        * @param {number} itemsPerPage The size of a single page.
-        * @param {function} getResults A function that returns a promise of results given a
-        * SPARQL query.
-        * @param {number} [pagesPerQuery=1] The number of pages to get per query.
-        * @param {number} [itemCount] The total number of items that the sparqlQry returns.
-        * Optional, will be queried based on the resultSetQry if not given.
-        */
         return function(sparqlQry, resultSetQry, itemsPerPage, getResults, pagesPerQuery, itemCount) {
 
             var self = this;

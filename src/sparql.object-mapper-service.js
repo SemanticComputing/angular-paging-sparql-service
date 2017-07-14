@@ -17,8 +17,8 @@
     */
     angular.module('sparql')
     .service('objectMapperService', objectMapperService);
+    objectMapperService.$inject = ['_'];
 
-    /* ngInject */
     function objectMapperService(_) {
         /* Overridable processing methods */
         ObjectMapper.prototype.makeObject = makeObject;

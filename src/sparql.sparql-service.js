@@ -9,6 +9,7 @@
     */
     angular.module('sparql')
     .factory('SparqlService', SparqlService);
+    SparqlService.$inject = ['$http', '$q', '_'];
 
     /**
     * @ngdoc function
@@ -37,7 +38,6 @@
     * var resultPromise = endpoint.getObjects(qry);
     * </pre>
     */
-    /* ngInject */
     function SparqlService($http, $q, _) {
         return function(configuration) {
 

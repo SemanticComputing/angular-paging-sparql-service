@@ -15,7 +15,7 @@
     * @constructor
     * @description
     * Service for building pageable SPARQL queries.
-    * @param {string} Prefixes prefixes used in the SPARQL query.
+    * @param {string} prefixes prefixes used in the SPARQL query.
     * @example
     * <pre>
     * var prefixes =
@@ -54,7 +54,6 @@
     * // } ORDER BY ?id <PAGE>
     * </pre>
     */
-    /* ngInject */
     function QueryBuilderService() {
 
         var resultSetQryShell =
