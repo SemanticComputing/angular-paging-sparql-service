@@ -43,6 +43,7 @@
     */
     angular.module('sparql')
     .factory('SparqlService', SparqlService);
+    SparqlService.$inject = ['$http', '$q', '_'];
 
     /**
     * @ngdoc function
@@ -71,7 +72,6 @@
     * var resultPromise = endpoint.getObjects(qry);
     * </pre>
     */
-    /* ngInject */
     function SparqlService($http, $q, _) {
         return function(configuration) {
 
@@ -141,45 +141,44 @@
     */
     angular.module('sparql')
     .factory('AdvancedSparqlService', AdvancedSparqlService);
+    AdvancedSparqlService.$inject = ['$http', '$q', 'SparqlService', 'PagerService', 'objectMapperService'];
 
-    /* ngInject */
+    /**
+    * @ngdoc function
+    * @name sparql.AdvancedSparqlService
+    * @constructor
+    * @description
+    * Service for querying a SPARQL endpoint, with paging support.
+    * @param {Object|string} configuration Configuration object or the SPARQL endpoit URL as a string.
+    *   The object has the following properties:
+    *
+    *   - **endpointUrl** - `{string}` - The SPARQL endpoint URL.
+    *   - **usePost** - `{boolean}` - If truthy, use POST instead of GET. Default is `false`.
+    * @param {Object} [mapper=objectMapperService] Object that maps the SPARQL results as objects.
+    * The mapper should provide 'makeObjectList' and 'makeObjectListNoGrouping'
+    * functions that take the SPARQL results as parameter and return the mapped objects.
+    * @example
+    * <pre>
+    * var config = { endpointUrl: 'http://dbpedia.org/sparql', usePost: false };
+    * var endpoint = new AdvancedSparqlService(config, objectMapperService);
+    * // Or using just a string parameter:
+    * endpoint = new AdvancedSparqlService('http://dbpedia.org/sparql');
+    *
+    * var resultSet = '?id a <http://dbpedia.org/ontology/Writer> .';
+    *
+    * var queryTemplate =
+    * 'SELECT * WHERE { ' +
+    * ' <RESULT_SET ' +
+    * ' OPTIONAL { ?id rdfs:label ?label . } ' +
+    * '}';
+    *
+    * var queryBuilder = new QueryBuilderService(prefixes);
+    * var qryObj = queryBuilder.buildQuery(qry, resultSet, '?id');
+    *
+    * var resultPromise = endpoint.getObjects(qryObj.query, 10, qryObj.resultSetQry, 1);
+    * </pre>
+    */
     function AdvancedSparqlService($http, $q, SparqlService, PagerService, objectMapperService) {
-
-        /**
-        * @ngdoc function
-        * @name sparql.AdvancedSparqlService
-        * @constructor
-        * @description
-        * Service for querying a SPARQL endpoint, with paging support.
-        * @param {Object|string} configuration Configuration object or the SPARQL endpoit URL as a string.
-        *   The object has the following properties:
-        *
-        *   - **endpointUrl** - `{string}` - The SPARQL endpoint URL.
-        *   - **usePost** - `{boolean}` - If truthy, use POST instead of GET. Default is `false`.
-        * @param {Object} [mapper=objectMapperService] Object that maps the SPARQL results as objects.
-        * The mapper should provide 'makeObjectList' and 'makeObjectListNoGrouping'
-        * functions that take the SPARQL results as parameter and return the mapped objects.
-        * @example
-        * <pre>
-        * var config = { endpointUrl: 'http://dbpedia.org/sparql', usePost: false };
-        * var endpoint = new AdvancedSparqlServiceSparqlService(config, objectMapperService);
-        * // Or using just a string parameter:
-        * endpoint = new AdvancedSparqlService('http://dbpedia.org/sparql');
-        *
-        * var resultSet = '?id a <http://dbpedia.org/ontology/Writer> .';
-        *
-        * var queryTemplate =
-        * 'SELECT * WHERE { ' +
-        * ' <RESULT_SET ' +
-        * ' OPTIONAL { ?id rdfs:label ?label . } ' +
-        * '}';
-        *
-        * var queryBuilder = new QueryBuilderService(prefixes);
-        * var qryObj = queryBuilder.buildQuery(qry, resultSet, '?id');
-        *
-        * var resultPromise = endpoint.getObjects(qryObj.query, 10, qryObj.resultSetQry, 1);
-        * </pre>
-        */
         return function(configuration, mapper) {
             var endpoint = new SparqlService(configuration);
 
@@ -252,7 +251,7 @@
                 // query the endpoint and return the results as a promise.
                 if (pageSize) {
                     return $q.when(new PagerService(sparqlQry, resultSetQry, pageSize,
-                            getResultsWithGrouping, pagesPerQuery));
+                        getResultsWithGrouping, pagesPerQuery));
                 }
                 // Query the endpoint.
                 return getResultsWithGrouping(sparqlQry.replace('<PAGE>', ''));
@@ -341,8 +340,8 @@
     */
     angular.module('sparql')
     .service('objectMapperService', objectMapperService);
+    objectMapperService.$inject = ['_'];
 
-    /* ngInject */
     function objectMapperService(_) {
         /* Overridable processing methods */
         ObjectMapper.prototype.makeObject = makeObject;
@@ -552,29 +551,28 @@
     */
     angular.module('sparql')
     .factory('PagerService', PagerService);
+    PagerService.$inject = ['$q', '_'];
 
-    /* ngInject */
+    /**
+    * @ngdoc function
+    * @name sparql.PagerService
+    * @constructor
+    * @description
+    * Service for paging SPARQL results.
+    *
+    * {@link sparql.AdvancedSparqlService `AdvancedSparqlService`} initializes this service, so manual init is not needed.
+    * @param {string} sparqlQry The SPARQL query.
+    * @param {string} resultSetQry The result set subquery part of the query - i.e. the part which
+    * defines the distinct objects that are being paged
+    * (containing `<PAGE>` as a placeholder for SPARQL limit and offset).
+    * @param {number} itemsPerPage The size of a single page.
+    * @param {function} getResults A function that returns a promise of results given a
+    * SPARQL query.
+    * @param {number} [pagesPerQuery=1] The number of pages to get per query.
+    * @param {number} [itemCount] The total number of items that the sparqlQry returns.
+    * Optional, will be queried based on the resultSetQry if not given.
+    */
     function PagerService($q, _) {
-
-        /**
-        * @ngdoc function
-        * @name sparql.PagerService
-        * @constructor
-        * @description
-        * Service for paging SPARQL results.
-        *
-        * {@link sparql.AdvancedSparqlService `AdvancedSparqlService`} initializes this service, so manual init is not needed.
-        * @param {string} sparqlQry The SPARQL query.
-        * @param {string} resultSetQry The result set subquery part of the query - i.e. the part which
-        * defines the distinct objects that are being paged
-        * (containing `<PAGE>` as a placeholder for SPARQL limit and offset).
-        * @param {number} itemsPerPage The size of a single page.
-        * @param {function} getResults A function that returns a promise of results given a
-        * SPARQL query.
-        * @param {number} [pagesPerQuery=1] The number of pages to get per query.
-        * @param {number} [itemCount] The total number of items that the sparqlQry returns.
-        * Optional, will be queried based on the resultSetQry if not given.
-        */
         return function(sparqlQry, resultSetQry, itemsPerPage, getResults, pagesPerQuery, itemCount) {
 
             var self = this;
@@ -865,7 +863,7 @@
     * @constructor
     * @description
     * Service for building pageable SPARQL queries.
-    * @param {string} Prefixes prefixes used in the SPARQL query.
+    * @param {string} prefixes prefixes used in the SPARQL query.
     * @example
     * <pre>
     * var prefixes =
@@ -904,7 +902,6 @@
     * // } ORDER BY ?id <PAGE>
     * </pre>
     */
-    /* ngInject */
     function QueryBuilderService() {
 
         var resultSetQryShell =
