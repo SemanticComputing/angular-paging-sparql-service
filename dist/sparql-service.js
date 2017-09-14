@@ -56,6 +56,7 @@
     *
     *   - **endpointUrl** - `{string}` - The SPARQL endpoint URL.
     *   - **usePost** - `{boolean}` - If truthy, use POST instead of GET. Default is `false`.
+    *   - **headers** - `{object}` - Additional headers to use in requests. Optional.
     * @example
     * <pre>
     * var endpoint = new SparqlService({ endpointUrl: 'http://dbpedia.org/sparql', usePost: false });
@@ -81,37 +82,39 @@
             }
 
             var defaultConfig = { usePost: false };
+            var defaultHeaders = {
+                'Accept': 'application/sparql-results+json',
+                'Content-type' : 'application/x-www-form-urlencoded'
+            };
 
             var config = angular.extend({}, defaultConfig, configuration);
+            var httpConf = { headers: angular.extend({}, defaultHeaders, config.headers) };
 
             var executeQuery = config.usePost ? post : get;
 
             function get(qry) {
-                return $http.get(config.endpointUrl + '?query=' + encodeURIComponent(qry) + '&format=json');
+                var url = config.endpointUrl + '?query=' + encodeURIComponent(qry) + '&format=json';
+                return $http.get(url, httpConf);
             }
 
             function post(qry) {
                 var data = 'query=' + encodeURIComponent(qry);
-                var conf = { headers: {
-                    'Accept': 'application/sparql-results+json',
-                    'Content-type' : 'application/x-www-form-urlencoded'
-                } };
-                return $http.post(config.endpointUrl, data, conf);
+                return $http.post(config.endpointUrl, data, httpConf);
             }
 
             /**
-            * @ngdoc method
-            * @methodOf sparql.SparqlService
-            * @name sparql.SparqlService#getObjects
-            * @param {string} sparqlQry The SPARQL query.
-            * @returns {promise} A promise of the SPARQL results.
-            * @description
-            * Get the SPARQL query results as a list of objects.
-            * @example
-            * <pre>
-            * var resultPromise = endpoint.getObjects(qry);
-            * </pre>
-            */
+             * @ngdoc method
+             * @methodOf sparql.SparqlService
+             * @name sparql.SparqlService#getObjects
+             * @param {string} sparqlQry The SPARQL query.
+             * @returns {promise} A promise of the SPARQL results.
+             * @description
+             * Get the SPARQL query results as a list of objects.
+             * @example
+             * <pre>
+             * var resultPromise = endpoint.getObjects(qry);
+             * </pre>
+             */
             function getObjects(sparqlQry) {
                 // Query the endpoint and return a promise of the bindings.
                 return executeQuery(sparqlQry).then(function(response) {
@@ -154,6 +157,7 @@
     *
     *   - **endpointUrl** - `{string}` - The SPARQL endpoint URL.
     *   - **usePost** - `{boolean}` - If truthy, use POST instead of GET. Default is `false`.
+    *   - **headers** - `{object}` - Additional headers to use in requests. Optional.
     * @param {Object} [mapper=objectMapperService] Object that maps the SPARQL results as objects.
     * The mapper should provide 'makeObjectList' and 'makeObjectListNoGrouping'
     * functions that take the SPARQL results as parameter and return the mapped objects.
