@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-## [0.8.1] - 2017-07-14
+## [0.8.1] - 2017-09-14
 
 ### Changed
 - Add configuration option for http headers.
