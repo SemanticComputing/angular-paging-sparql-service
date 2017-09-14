@@ -24,6 +24,7 @@
     *
     *   - **endpointUrl** - `{string}` - The SPARQL endpoint URL.
     *   - **usePost** - `{boolean}` - If truthy, use POST instead of GET. Default is `false`.
+    *   - **headers** - `{object}` - Additional headers to use in requests. Optional.
     * @param {Object} [mapper=objectMapperService] Object that maps the SPARQL results as objects.
     * The mapper should provide 'makeObjectList' and 'makeObjectListNoGrouping'
     * functions that take the SPARQL results as parameter and return the mapped objects.
