@@ -125,16 +125,16 @@
             * </pre>
             */
             function buildQuery(queryTemplate, resultSet, orderBy) {
-                var resultSetQry = resultSetQryShell
-                    .replace('<CONTENT>', resultSet)
-                    .replace('<ORDER_BY>', orderBy || '?id');
+                var resultSetQry = resultSetQryShell.replace('<CONTENT>', resultSet);
 
                 var resultSetPart = resultSetShell
                     .replace('<RESULT_SET>', resultSetQry);
 
                 resultSetQry = prefixes + resultSetQry;
 
-                var query = prefixes + queryTemplate.replace('<RESULT_SET>', resultSetPart);
+                var query = prefixes + queryTemplate
+                    .replace(/<RESULT_SET>/g, resultSetPart)
+                    .replace(/<ORDER_BY>/g, orderBy || '?id');
 
                 return {
                     resultSetQuery: resultSetQry,

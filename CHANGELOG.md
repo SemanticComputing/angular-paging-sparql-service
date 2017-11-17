@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+- QueryBuilderService replaces multiple instances of <RESULT_SET>.
+
 ## [0.8.1] - 2017-09-14
 
 ### Changed
