@@ -125,7 +125,9 @@
             * </pre>
             */
             function buildQuery(queryTemplate, resultSet, orderBy) {
-                var resultSetQry = resultSetQryShell.replace('<CONTENT>', resultSet);
+                var resultSetQry = resultSetQryShell
+                    .replace('<CONTENT>', resultSet)
+                    .replace(/<ORDER_BY>/g, orderBy || '?id');
 
                 var resultSetPart = resultSetShell
                     .replace('<RESULT_SET>', resultSetQry);

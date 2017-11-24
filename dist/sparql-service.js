@@ -120,7 +120,7 @@
                 return executeQuery(sparqlQry).then(function(response) {
                     return response.data.results.bindings;
                 }, function(response) {
-                    return $q.reject(response.data);
+                    return $q.reject(response);
                 });
             }
 
@@ -979,14 +979,16 @@
             function buildQuery(queryTemplate, resultSet, orderBy) {
                 var resultSetQry = resultSetQryShell
                     .replace('<CONTENT>', resultSet)
-                    .replace('<ORDER_BY>', orderBy || '?id');
+                    .replace(/<ORDER_BY>/g, orderBy || '?id');
 
                 var resultSetPart = resultSetShell
                     .replace('<RESULT_SET>', resultSetQry);
 
                 resultSetQry = prefixes + resultSetQry;
 
-                var query = prefixes + queryTemplate.replace('<RESULT_SET>', resultSetPart);
+                var query = prefixes + queryTemplate
+                    .replace(/<RESULT_SET>/g, resultSetPart)
+                    .replace(/<ORDER_BY>/g, orderBy || '?id');
 
                 return {
                     resultSetQuery: resultSetQry,
