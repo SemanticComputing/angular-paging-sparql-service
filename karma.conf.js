@@ -17,10 +17,10 @@ module.exports = function(config) {
 
         // list of files / patterns to load in the browser
         files: [
-            'bower_components/angular/angular.js',
+            'node_modules/angular/angular.js',
             'node_modules/angular-mocks/angular-mocks.js',
             'node_modules/karma-read-json/karma-read-json.js',
-            'bower_components/lodash/dist/lodash.js',
+            'node_modules/lodash/lodash.js',
             'src/sparql.module.js',
             'src/sparql.object-mapper-service.js',
             'src/sparql.sparql-service.js',

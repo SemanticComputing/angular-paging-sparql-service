@@ -7,6 +7,10 @@ as simple objects.
 
 `bower install angular-paging-sparql-service`
 
+or
+
+`npm install angular-paging-sparql-service`
+
 Include `sparql` in your module dependenies:
 
 ```
